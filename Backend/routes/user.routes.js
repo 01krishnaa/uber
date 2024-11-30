@@ -5,8 +5,9 @@ const {
   registerUser,
   loginUser,
   getUserProfile,
+  logoutUser,
 } = require("../controllers/user.controller");
-const authUser = require("../middlewares/auth.middleware");
+const {authUser} = require("../middlewares/auth.middleware");
 
 router.post(
   "/register",
@@ -34,5 +35,6 @@ router.post(
 );
 
 router.get("/profile", authUser, getUserProfile);
+router.get('/logout', authUser, logoutUser)
 
 module.exports = router;

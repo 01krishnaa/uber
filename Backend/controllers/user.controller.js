@@ -1,6 +1,7 @@
 const User = require("../models/user.model");
 const { validationResult } = require("express-validator");
 const { createUser } = require("../services/user.service");
+const BlacklistToken = require("../models/blacklistToken.model");
 
 const registerUser = async (req, res) => {
   try {
@@ -11,6 +12,12 @@ const registerUser = async (req, res) => {
     }
 
     const { fullName, email, password } = req.body;
+
+    const isUserAlreadyExist = await User.findOne({ email });
+
+    if (isUserAlreadyExist) {
+      return res.status(400).json({ message: "User already exists" });
+    }
 
     const hashPassword = await User.hashPassword(password);
 
@@ -67,7 +74,7 @@ const loginUser = async (req, res) => {
   }
 };
 
-const getUserProfile = async(req,res) => {
+const getUserProfile = async (req, res) => {
   try {
     res.status(200).json(req.user);
   } catch (error) {
@@ -78,4 +85,20 @@ const getUserProfile = async(req,res) => {
   }
 };
 
-module.exports = { registerUser, loginUser, getUserProfile };
+const logoutUser = async (req, res) => {
+  try {
+  
+    const token = req.cookies.token || req.headers.authorization.split(" ")[1];
+
+    await BlacklistToken.create({ token });
+    res.clearCookie("token");
+    res.status(200).json({ message: "Logged out" });
+  } catch (error) {
+    res.status(400).json({
+      msg: "Logout failed",
+      error,
+    });
+  }
+};
+
+module.exports = { registerUser, loginUser, getUserProfile, logoutUser };
